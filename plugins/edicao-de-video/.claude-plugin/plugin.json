@@ -1,0 +1,10 @@
+{
+  "name": "edicao-de-video",
+  "description": "Edição de vídeo com GPU local: transcrição com faster-whisper (sotaque e vocabulário do canal), corte do início da fala até a despedida sem reencodar, legendas estilo filme com editor de revisão sincronizado e render 4K na GPU, e capas de YouTube geradas por IA via OpenRouter a partir de frames do vídeo. Testado com vídeos de motovlog num PC com NVIDIA RTX.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Rafael Schettino",
+    "url": "https://github.com/rafaels-dev"
+  },
+  "keywords": ["video", "transcricao", "whisper", "legendas", "ffmpeg", "nvidia", "thumbnail", "youtube"]
+}

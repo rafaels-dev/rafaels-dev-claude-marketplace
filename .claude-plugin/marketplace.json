@@ -23,6 +23,22 @@
       "version": "1.0.0",
       "category": "productivity",
       "keywords": ["whatsapp", "canais", "cupons", "negociacao"]
+    },
+    {
+      "name": "edicao-de-video",
+      "source": "./plugins/edicao-de-video",
+      "description": "Transcrição na GPU local (faster-whisper), corte pela fala sem reencodar, legendas estilo filme com editor de revisão sincronizado e render 4K NVENC, e capas de YouTube por IA (OpenRouter) a partir de frames do vídeo. Testado com motovlog em NVIDIA RTX.",
+      "version": "1.0.0",
+      "category": "productivity",
+      "keywords": ["video", "transcricao", "whisper", "legendas", "ffmpeg", "nvidia", "thumbnail"]
+    },
+    {
+      "name": "motovlog",
+      "source": "./plugins/motovlog",
+      "description": "Do vídeo bruto de motovlog ao YouTube: aprende o estilo do seu canal e gera vídeo legendado, 3 títulos para teste A/B, descrição, tags e 3 capas com a sua moto. Usa o plugin edicao-de-video. Testado em NVIDIA RTX.",
+      "version": "1.0.0",
+      "category": "productivity",
+      "keywords": ["motovlog", "moto", "youtube", "thumbnail", "teste-ab", "brasil"]
     }
   ]
 }

@@ -1,0 +1,10 @@
+{
+  "name": "motovlog",
+  "description": "Do vídeo bruto de motovlog ao YouTube: aprende o estilo do seu canal (conhecer-canal), orquestra transcrição, corte e legendas, e escreve 3 títulos para teste A/B, descrição, tags e 3 capas com a sua moto em destaque. Usa o plugin 'edicao-de-video'. Testado num PC com NVIDIA RTX.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Rafael Schettino",
+    "url": "https://github.com/rafaels-dev"
+  },
+  "keywords": ["motovlog", "moto", "youtube", "thumbnail", "titulos", "teste-ab", "brasil"]
+}

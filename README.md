@@ -10,6 +10,8 @@ No Claude Code:
 /plugin marketplace add rafaels-dev/rafaels-dev-claude-marketplace
 /plugin install compras@rafaels-dev-marketplace
 /plugin install whatsapp@rafaels-dev-marketplace
+/plugin install edicao-de-video@rafaels-dev-marketplace
+/plugin install motovlog@rafaels-dev-marketplace
 ```
 
 ## Plugins
@@ -34,6 +36,48 @@ Para quem quer pagar o menor preço possível em compras online no Brasil.
 | `negociacao-whatsapp-lojas` | Encontra lojas da sua cidade, pede cotação com mensagens naturais, acompanha as respostas e negocia preço — sempre com a sua aprovação. |
 
 Os dois plugins funcionam juntos: o `monitor-de-cupons` usa o `whatsapp` para ler canais e negociar com lojas.
+
+### 🎬 `edicao-de-video` — do bruto ao vídeo legendado
+
+Skills genéricas de edição para quem grava e publica vídeo falado em português.
+
+| Skill | O que faz |
+|---|---|
+| `transcrever-video` | Transcreve na GPU local com faster-whisper `large-v3`, com timestamps por palavra e vocabulário/sotaque do canal no prompt. |
+| `cortar-video` | Acha onde a fala começa e onde está a despedida ("tchau", "se inscreve"…), ignora alucinações do Whisper sobre ruído e corta sem reencodar. |
+| `legendar-video` | Gera legendas estilo filme (amarelas, borda preta, 2 linhas), abre um **editor de revisão sincronizado com o vídeo** no navegador (edita texto e tempos com o vídeo tocando, salva direto no .srt) e, depois da sua aprovação, queima as legendas em 4K na GPU. |
+| `gerar-capa` | Extrai frames nítidos do próprio vídeo e gera capas de alto impacto (título renderizado pela IA, estilo das suas miniaturas) via OpenRouter, com 3 opções para teste A/B. |
+
+### 🏍️ `motovlog` — vídeo de moto pronto pro YouTube
+
+Usa o `edicao-de-video` e acrescenta o que é específico de canal de motovlog.
+
+| Skill | O que faz |
+|---|---|
+| `conhecer-canal` | Lê o seu canal no YouTube (títulos, descrições, tags, views, miniaturas) e monta o `canal.md` com seu estilo, moto, câmera, cidade e vocabulário. Só para o seu próprio canal. |
+| `video-para-youtube` | Orquestra tudo: transcrição → corte → legendas com revisão → títulos/descrição/tags → capas. |
+| `metadados-youtube` | 3 títulos com ângulos diferentes para o teste A/B, descrição no seu tom e tags separadas por vírgula, num `youtube.txt` pronto para colar. |
+| `capas-youtube` | 3 capas com a sua moto em destaque (grafia exata do modelo, cenário da sua cidade), cada uma a partir de um frame diferente do vídeo. |
+
+> **Testado com vídeos de motovlog num PC com Windows 11 e NVIDIA RTX 4060 Laptop (8 GB).** Tempos de referência para um vídeo 4K60 de 12 min: transcrição em ~1-2 min, proxy de revisão em ~1 min, render final legendado em ~5 min. Sem GPU NVIDIA RTX funciona, mas bem mais devagar (transcrição e decodificação na CPU, encoders `libx264`/`libx265` no lugar de NVENC).
+
+#### Requisitos dos plugins de vídeo
+
+- **GPU NVIDIA RTX** com driver atualizado (recomendado; é onde foi testado).
+- **ffmpeg** com NVENC no PATH (`ffmpeg -encoders | grep nvenc`). No Windows: `choco install ffmpeg-full` ou `winget install Gyan.FFmpeg`.
+- **Python 3.10+** com: `pip install faster-whisper requests pillow yt-dlp` e PyTorch com CUDA (https://pytorch.org/get-started/locally/).
+- **OpenRouter** (só para as capas). A variável de ambiente `OPENROUTER_API_KEY` precisa existir antes de pedir capas:
+  1. Crie uma conta em https://openrouter.ai e adicione créditos (Settings → Credits). Cada capa custa alguns centavos de dólar.
+  2. Gere uma chave em https://openrouter.ai/settings/keys.
+  3. Defina a variável de ambiente do usuário e reinicie o Claude Code:
+     - Windows (PowerShell): `[Environment]::SetEnvironmentVariable("OPENROUTER_API_KEY", "sk-or-...", "User")`
+     - macOS/Linux: `export OPENROUTER_API_KEY="sk-or-..."` no `~/.zshrc` ou `~/.bashrc`
+
+  Não cole a chave no chat: as skills só leem a variável de ambiente.
+
+#### Pasta do canal
+
+Os dados do seu canal ficam **só na sua máquina**, numa pasta de trabalho (ex.: `~/videos-youtube/`): `canal.md` (gerado pelo `conhecer-canal`), `estilo-capas/` (suas miniaturas de referência) e uma subpasta por vídeo. Nada disso vai para o plugin nem para o repositório.
 
 ## Canais de ofertas no WhatsApp
 
@@ -71,6 +115,14 @@ Além das skills, cada plugin traz comandos com prompts já escritos. Digite `/`
 | `/compras:negociar-vendedor` | `/compras:negociar-vendedor <link do anúncio> pedir R$ 420 no Pix; se recusar, agradece` |
 | `/whatsapp:ler-canais` | `/whatsapp:ler-canais só cupons do Mercado Livre e Shopee` |
 | `/whatsapp:cotar-lojas` | `/whatsapp:cotar-lojas peça <código> em <sua cidade>, referência R$ 450 no Pix` |
+| `/edicao-de-video:transcrever` | `/edicao-de-video:transcrever "D:\Videos\bruto\DJI_0011.MP4" sotaque do interior, fala sobre trilha e pneu` |
+| `/edicao-de-video:cortar` | `/edicao-de-video:cortar "D:\Videos\bruto\DJI_0011.MP4"` |
+| `/edicao-de-video:legendar` | `/edicao-de-video:legendar D:\Videos\2026-10-08_meu-video` |
+| `/edicao-de-video:gerar-capas` | `/edicao-de-video:gerar-capas D:\Videos\2026-10-08_meu-video títulos no youtube.txt` |
+| `/motovlog:conhecer-canal` | `/motovlog:conhecer-canal https://www.youtube.com/@<meu-canal> pasta D:\Videos` |
+| `/motovlog:preparar-video` | `/motovlog:preparar-video "D:\Videos\bruto\DJI_0011.MP4" quero revisar as legendas antes` |
+| `/motovlog:titulos` | `/motovlog:titulos D:\Videos\2026-10-08_meu-video foco no comparativo de consumo` |
+| `/motovlog:capas` | `/motovlog:capas D:\Videos\2026-10-08_meu-video refaz a B, nome da moto saiu errado` |
 
 ## Exemplos de uso
 
@@ -81,4 +133,17 @@ cupom e testa tudo no carrinho do Mercado Livre e da Shopee. Só quero entrega e
 
 ```
 Pergunta o preço dessa peça nas concessionárias da minha cidade pelo WhatsApp e vê se fazem por R$ 450 no Pix.
+```
+
+```
+Esse é o meu canal: https://www.youtube.com/@<meu-canal>. Aprende o meu estilo e monta o canal.md.
+```
+
+```
+"D:\Videos\bruto\DJI_0011.MP4" prepara pro YouTube: transcreve, corta no tchau,
+legenda (quero revisar antes), 3 títulos, descrição, tags e 3 capas pra teste A/B.
+```
+
+```
+Refaz a capa B: o nome da moto saiu errado no tanque.
 ```

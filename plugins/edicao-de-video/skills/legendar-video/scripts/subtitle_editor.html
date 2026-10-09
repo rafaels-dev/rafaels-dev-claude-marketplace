@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Editor de Legendas</title>
+<style>
+  :root {
+    --bg: #111317; --panel: #1a1d23; --card: #20242b; --line: #2e333c;
+    --text: #e6e8eb; --muted: #8b929c; --accent: #f5c518; --danger: #e5534b; --ok: #3fb950; --flag: #d29922;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font: 14px/1.4 system-ui, "Segoe UI", sans-serif; }
+  .app { display: grid; grid-template-columns: minmax(0, 1fr) 460px; height: 100vh; }
+  .left { display: flex; flex-direction: column; padding: 14px; gap: 10px; min-width: 0; }
+  .stage { position: relative; background: #000; border-radius: 8px; overflow: hidden; flex: 0 0 auto; }
+  video { width: 100%; display: block; max-height: calc(100vh - 230px); }
+  .overlay { position: absolute; left: 0; right: 0; text-align: center; pointer-events: none;
+    color: #ffff00; font-family: Arial, sans-serif; font-weight: 700; white-space: pre-line;
+    paint-order: stroke fill; -webkit-text-stroke: 0.12em #000;
+    text-shadow: 0.04em 0.06em 0.05em rgba(0,0,0,.8); }
+  .bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  button, select { background: var(--card); color: var(--text); border: 1px solid var(--line);
+    border-radius: 6px; padding: 6px 10px; font: inherit; cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); color: #111; border-color: var(--accent); font-weight: 600; }
+  .time { font-variant-numeric: tabular-nums; color: var(--muted); min-width: 170px; }
+  .timeline { position: relative; height: 34px; background: var(--panel); border-radius: 6px; cursor: pointer; overflow: hidden; }
+  .timeline .blk { position: absolute; top: 6px; bottom: 6px; background: #3a4150; border-radius: 2px; }
+  .timeline .blk.active { background: var(--accent); }
+  .timeline .blk.flag { background: var(--flag); }
+  .timeline .head { position: absolute; top: 0; bottom: 0; width: 2px; background: #fff; }
+  .status { margin-left: auto; color: var(--muted); }
+  .status.saved { color: var(--ok); } .status.err { color: var(--danger); }
+  .help { color: var(--muted); font-size: 12px; }
+  kbd { background: var(--card); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; font-size: 11px; }
+  .right { background: var(--panel); border-left: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+  .rhead { padding: 10px 12px; border-bottom: 1px solid var(--line); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .rhead input[type=search] { flex: 1; min-width: 120px; background: var(--card); color: var(--text);
+    border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font: inherit; }
+  .list { overflow-y: auto; padding: 8px; flex: 1; }
+  .cue { background: var(--card); border: 1px solid var(--line); border-left: 3px solid transparent;
+    border-radius: 8px; padding: 8px; margin-bottom: 8px; }
+  .cue.active { border-left-color: var(--accent); background: #2a2a22; }
+  .cue.flag { border-left-color: var(--flag); }
+  .cue.flag .num::after { content: " revisar"; color: var(--flag); font-weight: 600; }
+  .cue .top { display: flex; align-items: center; gap: 4px; margin-bottom: 6px; flex-wrap: wrap; }
+  .num { color: var(--muted); width: 74px; cursor: pointer; font-size: 12px; }
+  .cue input.t { width: 92px; background: transparent; color: var(--text); border: 1px solid var(--line);
+    border-radius: 4px; padding: 2px 4px; font: 12px ui-monospace, Consolas, monospace; }
+  .cue input.t.bad { border-color: var(--danger); }
+  .mini { padding: 1px 6px; font-size: 11px; }
+  .cue textarea { width: 100%; resize: vertical; min-height: 44px; background: #15171c; color: var(--text);
+    border: 1px solid var(--line); border-radius: 6px; padding: 6px; font: 15px/1.35 system-ui, sans-serif; }
+  .cue textarea:focus { outline: none; border-color: var(--accent); }
+  .meta { display: flex; gap: 4px; margin-top: 6px; align-items: center; flex-wrap: wrap; }
+  .meta .info { color: var(--muted); font-size: 11px; margin-right: auto; }
+  .meta .info.warn { color: var(--flag); }
+  .del:hover { border-color: var(--danger); color: var(--danger); }
+  @media (max-width: 900px) { .app { grid-template-columns: 1fr; height: auto; } .right { height: 70vh; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="left">
+    <div class="stage" id="stage">
+      <video id="v" src="/video" preload="auto"></video>
+      <div class="overlay" id="ov"></div>
+    </div>
+    <div class="timeline" id="tl"><div class="head" id="head"></div></div>
+    <div class="bar">
+      <button id="play" class="primary">▶ Play</button>
+      <button data-seek="-5">−5s</button><button data-seek="-1">−1s</button>
+      <button data-seek="1">+1s</button><button data-seek="5">+5s</button>
+      <select id="rate"><option>0.5</option><option>0.75</option><option selected>1</option><option>1.25</option><option>1.5</option><option>2</option></select>
+      <span class="time" id="time">0:00.000 / 0:00</span>
+      <span class="status" id="status">carregando…</span>
+    </div>
+    <div class="bar">
+      <button id="setStart" title="Alt+[">[ Início = agora</button>
+      <button id="setEnd" title="Alt+]">Fim = agora ]</button>
+      <button id="split" title="Alt+S">Dividir aqui</button>
+      <button id="add" title="Alt+N">+ Nova legenda aqui</button>
+      <button id="undo" title="Ctrl+Z">Desfazer</button>
+      <label class="help"><input type="checkbox" id="pauseEdit" checked> pausar ao digitar</label>
+    </div>
+    <div class="help">
+      <kbd>Espaço</kbd> play/pausa · <kbd>←</kbd><kbd>→</kbd> 1s · <kbd>↑</kbd><kbd>↓</kbd> legenda anterior/próxima ·
+      dentro do texto: <kbd>Ctrl+Enter</kbd> toca a legenda · <kbd>Esc</kbd> sai do texto ·
+      clique no número ou na linha do tempo para ir até o ponto. Tudo é salvo automaticamente no .srt.
+    </div>
+  </div>
+  <div class="right">
+    <div class="rhead">
+      <strong id="fname">legendas</strong>
+      <input type="search" id="q" placeholder="buscar texto…">
+      <label class="help"><input type="checkbox" id="follow" checked> seguir vídeo</label>
+    </div>
+    <div class="list" id="list"></div>
+  </div>
+</div>
+<script>
+const $ = s => document.querySelector(s);
+const v = $("#v"), ov = $("#ov"), list = $("#list"), tl = $("#tl"), statusEl = $("#status");
+let cues = [], active = -1, history = [], saveTimer = null;
+
+const fmt = (s, ms = true) => {
+  s = Math.max(0, s); const m = Math.floor(s / 60), r = s - m * 60;
+  return ms ? `${m}:${r.toFixed(3).padStart(6, "0")}` : `${m}:${String(Math.floor(r)).padStart(2, "0")}`;
+};
+const parseT = str => {
+  const m = String(str).trim().match(/^(?:(\d+):)?(\d+(?:[.,]\d+)?)$/);
+  return m ? (+(m[1] || 0)) * 60 + parseFloat(m[2].replace(",", ".")) : NaN;
+};
+
+async function load() {
+  const r = await fetch("/api/srt"); const d = await r.json();
+  cues = d.cues.map((c, i) => ({ ...c, flag: d.flags.includes(i + 1) }));
+  $("#fname").textContent = d.name; setStatus("pronto");
+  renderList(); renderTimeline();
+}
+
+function snapshot() { history.push(JSON.stringify(cues)); if (history.length > 200) history.shift(); }
+function undo() { if (!history.length) return; cues = JSON.parse(history.pop()); renderList(); renderTimeline(); scheduleSave(); }
+
+function setStatus(t, cls = "") { statusEl.textContent = t; statusEl.className = "status " + cls; }
+function scheduleSave() { setStatus("alterado…"); clearTimeout(saveTimer); saveTimer = setTimeout(save, 700); }
+async function save() {
+  clearTimeout(saveTimer);
+  try {
+    const r = await fetch("/api/srt", { method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cues: cues.map(({ start, end, text }) => ({ start, end, text })) }) });
+    if (!r.ok) throw new Error(r.status);
+    setStatus("salvo ✓ " + new Date().toLocaleTimeString(), "saved");
+  } catch (e) { setStatus("erro ao salvar: " + e.message, "err"); }
+}
+
+function lineInfo(text) {
+  const lines = text.split("\n"), longest = Math.max(...lines.map(l => l.length));
+  return { txt: `${lines.length} linha${lines.length > 1 ? "s" : ""} · maior ${longest} car.`, warn: lines.length > 2 || longest > 42 };
+}
+
+function renderList() {
+  const q = $("#q").value.trim().toLowerCase();
+  list.innerHTML = "";
+  cues.forEach((c, i) => {
+    if (q && !c.text.toLowerCase().includes(q)) return;
+    const el = document.createElement("div");
+    el.className = "cue" + (i === active ? " active" : "") + (c.flag ? " flag" : "");
+    el.dataset.i = i;
+    const li = lineInfo(c.text);
+    el.innerHTML = `
+      <div class="top">
+        <span class="num" title="ir para esta legenda">#${i + 1}</span>
+        <button class="mini" data-act="s-">−</button><input class="t" data-f="start" value="${fmt(c.start)}"><button class="mini" data-act="s+">+</button>
+        <span class="help">→</span>
+        <button class="mini" data-act="e-">−</button><input class="t" data-f="end" value="${fmt(c.end)}"><button class="mini" data-act="e+">+</button>
+      </div>
+      <textarea rows="2" spellcheck="true" lang="pt-BR"></textarea>
+      <div class="meta">
+        <span class="info ${li.warn ? "warn" : ""}">${li.txt} · ${(c.end - c.start).toFixed(1)}s</span>
+        <button class="mini" data-act="play">▶ tocar</button>
+        <button class="mini" data-act="merge" ${i === cues.length - 1 ? "disabled" : ""}>juntar c/ próxima</button>
+        <button class="mini" data-act="flag">${c.flag ? "ok, revisado" : "marcar"}</button>
+        <button class="mini del" data-act="del">apagar</button>
+      </div>`;
+    el.querySelector("textarea").value = c.text;
+    list.appendChild(el);
+  });
+}
+
+function refreshCard(i) {
+  const el = list.querySelector(`.cue[data-i="${i}"]`); if (!el) return;
+  const c = cues[i], li = lineInfo(c.text);
+  el.querySelector('[data-f="start"]').value = fmt(c.start);
+  el.querySelector('[data-f="end"]').value = fmt(c.end);
+  const info = el.querySelector(".info");
+  info.textContent = `${li.txt} · ${(c.end - c.start).toFixed(1)}s`; info.classList.toggle("warn", li.warn);
+}
+
+function renderTimeline() {
+  const d = v.duration || cues.at(-1)?.end || 1;
+  tl.querySelectorAll(".blk").forEach(b => b.remove());
+  cues.forEach((c, i) => {
+    const b = document.createElement("div");
+    b.className = "blk" + (i === active ? " active" : "") + (c.flag ? " flag" : "");
+    b.style.left = (c.start / d * 100) + "%"; b.style.width = Math.max((c.end - c.start) / d * 100, 0.15) + "%";
+    tl.insertBefore(b, $("#head"));
+  });
+}
+
+function cueAt(t) { return cues.findIndex(c => t >= c.start && t < c.end); }
+function currentOrNearest() {
+  if (active >= 0) return active;
+  const t = v.currentTime; let best = -1;
+  cues.forEach((c, i) => { if (c.start <= t) best = i; });
+  return best;
+}
+
+function sizeOverlay() {
+  const r = v.getBoundingClientRect(), vw = v.videoWidth || 16, vh = v.videoHeight || 9;
+  const scale = Math.min(r.width / vw, r.height / vh), h = vh * scale, top = (r.height - h) / 2;
+  ov.style.fontSize = (h * 15 / 288) + "px";            // mesmo tamanho do libass (FontSize=15 @ PlayResY 288)
+  ov.style.bottom = (top + h * 18 / 288) + "px";        // MarginV=18
+  ov.style.lineHeight = "1.15";
+}
+
+function tick() {
+  const t = v.currentTime, i = cueAt(t);
+  ov.textContent = i >= 0 ? cues[i].text : "";
+  $("#time").textContent = `${fmt(t)} / ${fmt(v.duration || 0, false)}`;
+  $("#head").style.left = (t / (v.duration || 1) * 100) + "%";
+  if (i !== active) {
+    list.querySelector(".cue.active")?.classList.remove("active");
+    tl.querySelectorAll(".blk.active").forEach(b => b.classList.remove("active"));
+    active = i;
+    if (i >= 0) {
+      const el = list.querySelector(`.cue[data-i="${i}"]`);
+      el?.classList.add("active");
+      tl.querySelectorAll(".blk")[i]?.classList.add("active");
+      const typing = document.activeElement?.tagName === "TEXTAREA" || document.activeElement?.tagName === "INPUT";
+      if ($("#follow").checked && el && !typing) el.scrollIntoView({ block: "center", behavior: "smooth" });
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+let stopAt = null;
+function playCue(i) { v.currentTime = cues[i].start + 0.001; stopAt = cues[i].end; v.play(); }
+v.addEventListener("timeupdate", () => { if (stopAt !== null && v.currentTime >= stopAt) { v.pause(); stopAt = null; } });
+v.addEventListener("play", () => $("#play").textContent = "❚❚ Pausa");
+v.addEventListener("pause", () => $("#play").textContent = "▶ Play");
+v.addEventListener("loadedmetadata", () => { sizeOverlay(); renderTimeline(); });
+window.addEventListener("resize", sizeOverlay);
+v.addEventListener("click", () => v.paused ? v.play() : v.pause());
+
+$("#play").onclick = () => { stopAt = null; v.paused ? v.play() : v.pause(); };
+document.querySelectorAll("[data-seek]").forEach(b => b.onclick = () => v.currentTime += +b.dataset.seek);
+$("#rate").onchange = e => v.playbackRate = +e.target.value;
+$("#q").oninput = renderList;
+$("#undo").onclick = undo;
+tl.onclick = e => { const r = tl.getBoundingClientRect(); v.currentTime = (e.clientX - r.left) / r.width * v.duration; };
+
+function setEdge(which) {
+  const i = currentOrNearest(); if (i < 0) return;
+  snapshot(); cues[i][which] = +v.currentTime.toFixed(3);
+  if (cues[i].end <= cues[i].start) cues[i].end = cues[i].start + 0.5;
+  refreshCard(i); renderTimeline(); scheduleSave();
+}
+function split() {
+  const t = v.currentTime, i = cueAt(t); if (i < 0) return;
+  snapshot(); const c = cues[i], words = c.text.replace(/\n/g, " ").split(" ");
+  const frac = (t - c.start) / (c.end - c.start), k = Math.max(1, Math.min(words.length - 1, Math.round(words.length * frac)));
+  cues.splice(i, 1, { ...c, end: +t.toFixed(3), text: words.slice(0, k).join(" ") },
+                    { ...c, start: +t.toFixed(3), text: words.slice(k).join(" ") });
+  renderList(); renderTimeline(); scheduleSave();
+}
+function addCue() {
+  const t = +v.currentTime.toFixed(3); snapshot();
+  const next = cues.find(c => c.start > t);
+  cues.push({ start: t, end: Math.min(t + 2, next ? next.start - 0.05 : t + 2), text: "", flag: false });
+  cues.sort((a, b) => a.start - b.start);
+  renderList(); renderTimeline(); scheduleSave();
+  const i = cues.findIndex(c => c.start === t);
+  list.querySelector(`.cue[data-i="${i}"] textarea`)?.focus();
+}
+$("#setStart").onclick = () => setEdge("start");
+$("#setEnd").onclick = () => setEdge("end");
+$("#split").onclick = split;
+$("#add").onclick = addCue;
+
+list.addEventListener("click", e => {
+  const card = e.target.closest(".cue"); if (!card) return;
+  const i = +card.dataset.i, act = e.target.dataset.act;
+  if (e.target.classList.contains("num")) { v.currentTime = cues[i].start + 0.001; return; }
+  if (!act) return;
+  const c = cues[i];
+  if (act === "play") return playCue(i);
+  snapshot();
+  if (act === "s-") c.start = Math.max(0, +(c.start - 0.1).toFixed(3));
+  if (act === "s+") c.start = +(c.start + 0.1).toFixed(3);
+  if (act === "e-") c.end = +(c.end - 0.1).toFixed(3);
+  if (act === "e+") c.end = +(c.end + 0.1).toFixed(3);
+  if (act.length === 2) { refreshCard(i); renderTimeline(); v.currentTime = act[0] === "s" ? c.start : Math.max(c.end - 0.5, c.start); return scheduleSave(); }
+  if (act === "flag") c.flag = !c.flag;
+  if (act === "del") cues.splice(i, 1);
+  if (act === "merge") { const n = cues[i + 1]; c.end = n.end; c.text = (c.text + " " + n.text).replace(/\s+/g, " ").trim(); cues.splice(i + 1, 1); }
+  renderList(); renderTimeline(); scheduleSave();
+});
+
+let typingSnap = false;
+list.addEventListener("focusin", e => {
+  if (e.target.tagName !== "TEXTAREA") return;
+  typingSnap = false;
+  if ($("#pauseEdit").checked) v.pause();
+});
+list.addEventListener("input", e => {
+  const card = e.target.closest(".cue"); if (!card) return;
+  const i = +card.dataset.i;
+  if (e.target.tagName === "TEXTAREA") {
+    if (!typingSnap) { snapshot(); typingSnap = true; }
+    cues[i].text = e.target.value; refreshCard(i); scheduleSave();
+  }
+});
+list.addEventListener("change", e => {
+  if (!e.target.classList.contains("t")) return;
+  const i = +e.target.closest(".cue").dataset.i, val = parseT(e.target.value);
+  if (isNaN(val)) { e.target.classList.add("bad"); return; }
+  e.target.classList.remove("bad"); snapshot();
+  cues[i][e.target.dataset.f] = +val.toFixed(3);
+  refreshCard(i); renderTimeline(); scheduleSave();
+});
+list.addEventListener("keydown", e => {
+  if (e.target.tagName !== "TEXTAREA") return;
+  const i = +e.target.closest(".cue").dataset.i;
+  if (e.key === "Enter" && e.ctrlKey) { e.preventDefault(); playCue(i); }
+  if (e.key === "Escape") e.target.blur();
+});
+
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey && e.key.toLowerCase() === "s") { e.preventDefault(); return save(); }
+  if (e.altKey && e.key === "[") { e.preventDefault(); return setEdge("start"); }
+  if (e.altKey && e.key === "]") { e.preventDefault(); return setEdge("end"); }
+  if (e.altKey && e.key.toLowerCase() === "s") { e.preventDefault(); return split(); }
+  if (e.altKey && e.key.toLowerCase() === "n") { e.preventDefault(); return addCue(); }
+  const tag = document.activeElement?.tagName;
+  if (tag === "TEXTAREA" || tag === "INPUT" || tag === "SELECT") return;
+  if (e.ctrlKey && e.key.toLowerCase() === "z") { e.preventDefault(); return undo(); }
+  if (e.key === " ") { e.preventDefault(); stopAt = null; v.paused ? v.play() : v.pause(); }
+  if (e.key === "ArrowLeft") { e.preventDefault(); v.currentTime -= 1; }
+  if (e.key === "ArrowRight") { e.preventDefault(); v.currentTime += 1; }
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    e.preventDefault(); const t = v.currentTime;
+    const i = e.key === "ArrowDown" ? cues.findIndex(c => c.start > t + 0.01)
+                                    : cues.findLastIndex(c => c.start < t - 0.3);
+    if (i >= 0) v.currentTime = cues[i].start + 0.001;
+  }
+});
+window.addEventListener("beforeunload", e => { if (statusEl.textContent.startsWith("alterado")) { save(); e.preventDefault(); } });
+
+load(); sizeOverlay(); requestAnimationFrame(tick);
+</script>
+</body>
+</html>
