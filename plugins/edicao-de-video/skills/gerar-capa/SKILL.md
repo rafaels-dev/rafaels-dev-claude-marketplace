@@ -7,17 +7,29 @@ description: Gera capas (miniaturas/thumbnails) de YouTube de alto impacto via O
 
 > Testado em vídeos de motovlog, num PC com Windows 11 e **NVIDIA RTX 4060 Laptop (8 GB)**. A imagem é gerada na nuvem (OpenRouter); a máquina local só extrai frames e recorta.
 
-## Pré-condição: OpenRouter configurado
+## Pré-condição: chave do OpenRouter
 
-A variável de ambiente `OPENROUTER_API_KEY` precisa existir **antes** de usar esta skill. Verifique primeiro, sem mostrar o valor: `python -c "import os;print('ok' if os.environ.get('OPENROUTER_API_KEY') else 'faltando')"`. Se estiver faltando, pare e passe ao usuário estes passos (o script também imprime isso):
+A chave `OPENROUTER_API_KEY` precisa estar configurada **antes** de usar esta skill. O script procura nesta ordem:
+1. a variável de ambiente `OPENROUTER_API_KEY`;
+2. um arquivo `.env` na pasta atual ou em qualquer pasta acima dela (ex.: na pasta de trabalho dos vídeos, que contém as subpastas de cada vídeo), com a linha `OPENROUTER_API_KEY=sk-or-...`.
+
+Confira primeiro, sem mostrar o valor, rodando a partir da pasta do vídeo:
+
+```
+python -I scripts/generate_cover.py --check-key
+```
+
+O comando responde `ok (chave encontrada em: ...)` ou imprime o passo a passo de configuração. Se faltar a chave, pare e passe ao usuário estes passos:
 
 1. Crie uma conta em https://openrouter.ai e adicione créditos (Settings → Credits). Cada capa custa alguns centavos de dólar.
 2. Gere uma chave em https://openrouter.ai/settings/keys.
-3. Defina a variável de ambiente do usuário e reinicie o Claude Code para ela ser carregada:
-   - Windows (PowerShell): `[Environment]::SetEnvironmentVariable("OPENROUTER_API_KEY", "sk-or-...", "User")`
-   - macOS/Linux: `export OPENROUTER_API_KEY="sk-or-..."` no `~/.zshrc` ou `~/.bashrc`
+3. Configure de um destes jeitos:
+   - **`.env`** na pasta de trabalho dos vídeos: `OPENROUTER_API_KEY=sk-or-...`. Mantenha esse arquivo fora de qualquer repositório git, ou no `.gitignore`.
+   - **Variável de ambiente** do usuário, reiniciando o Claude Code depois:
+     - Windows (PowerShell): `[Environment]::SetEnvironmentVariable("OPENROUTER_API_KEY", "sk-or-...", "User")`
+     - macOS/Linux: `export OPENROUTER_API_KEY="sk-or-..."` no `~/.zshrc` ou `~/.bashrc`
 
-Nunca imprima, grave em arquivo nem peça a chave no chat: quem configura é o usuário. Outros requisitos: Python com `requests` e `Pillow`.
+Nunca mostre o conteúdo do `.env` (não use cat/Read nele) e nunca peça a chave no chat: quem configura é o usuário. Outros requisitos: Python com `requests` e `Pillow`.
 
 ## Por que este estilo
 

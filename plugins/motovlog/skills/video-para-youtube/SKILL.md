@@ -18,13 +18,14 @@ Coordena as skills para transformar um arquivo bruto em: vídeo final legendado 
 | 4. Títulos, descrição, tags | `metadados-youtube` | `motovlog` | `youtube.txt` |
 | 5. Capas A/B/C | `capas-youtube` | `motovlog` | `capas/capa_A.png` … |
 
-Requer o plugin `edicao-de-video` instalado. As capas também exigem a variável de ambiente `OPENROUTER_API_KEY` (veja `gerar-capa`).
+Requer o plugin `edicao-de-video` instalado. As capas também exigem a chave `OPENROUTER_API_KEY`, na variável de ambiente ou num `.env` na pasta do canal (veja `gerar-capa`).
 
 ## Pasta do canal
 
 Tudo gira em torno de uma **pasta do canal** (ex.: `~/videos-youtube/`) com:
 - `canal.md`: perfil do canal (moto, câmera, cidade, vocabulário para transcrição, correções frequentes, estilo de títulos/descrição/tags, regras das capas);
 - `estilo-capas/`: miniaturas do próprio canal;
+- `.env`: `OPENROUTER_API_KEY=...` para as capas (se não estiver na variável de ambiente);
 - uma subpasta por vídeo: `AAAA-MM-DD_assunto/`.
 
 Procure a pasta no diretório atual, na memória do usuário, ou pergunte. **Sem `canal.md`, rode `conhecer-canal` primeiro**: é o que faz títulos, legendas e capas parecerem do dono do canal, e não genéricos.

@@ -8,7 +8,7 @@ O modelo recebe miniaturas do próprio canal (pasta estilo-capas/, procurada no 
 nos pais) como guia de estilo + frames reais do vídeo, e renderiza a capa inteira, inclusive o texto.
 Se a imagem voltar fora de 16:9, é recortada no centro (o prompt pede margem de segurança).
 --from-raw só refaz o recorte a partir de uma imagem já gerada (sem custo de API).
-Pré-condição: variável de ambiente OPENROUTER_API_KEY (instruções no erro, se faltar).
+Chave: OPENROUTER_API_KEY na variável de ambiente ou num .env na pasta atual ou acima (--check-key confere).
 """
 import argparse
 import base64
@@ -50,12 +50,30 @@ def find_up(name, start=None):
         d = parent
 
 
-SETUP_HELP = """OPENROUTER_API_KEY não está definida (pré-condição desta skill).
+SETUP_HELP = """Chave do OpenRouter não encontrada (pré-condição desta skill).
 1. Crie uma conta em https://openrouter.ai e adicione créditos (Settings > Credits).
 2. Gere uma chave em https://openrouter.ai/settings/keys
-3. Defina a variável de ambiente do usuário e abra um terminal novo (reinicie o Claude Code):
-   Windows (PowerShell): [Environment]::SetEnvironmentVariable("OPENROUTER_API_KEY", "sk-or-...", "User")
-   macOS/Linux: adicione  export OPENROUTER_API_KEY="sk-or-..."  ao ~/.zshrc ou ~/.bashrc"""
+3. Configure de UM destes jeitos:
+   a) arquivo .env na pasta de trabalho dos vídeos (ou numa pasta acima dela), com a linha:
+        OPENROUTER_API_KEY=sk-or-...
+   b) variável de ambiente do usuário (reinicie o Claude Code depois):
+        Windows (PowerShell): [Environment]::SetEnvironmentVariable("OPENROUTER_API_KEY", "sk-or-...", "User")
+        macOS/Linux: export OPENROUTER_API_KEY="sk-or-..."  no ~/.zshrc ou ~/.bashrc"""
+
+
+def load_key():
+    """Variável de ambiente OPENROUTER_API_KEY; se não houver, o primeiro .env achado subindo
+    a partir do diretório atual. Devolve (chave, origem) sem nunca imprimir a chave."""
+    key = os.environ.get("OPENROUTER_API_KEY", "").strip()
+    if key:
+        return key, "variável de ambiente"
+    path = find_up(".env")
+    if path:
+        for line in open(path, encoding="utf-8"):
+            k, _, v = line.strip().removeprefix("export ").partition("=")
+            if k.strip() == "OPENROUTER_API_KEY" and v.strip():
+                return v.strip().strip('"').strip("'"), path
+    return None, None
 
 
 def data_url(path, max_w=1024):
@@ -82,8 +100,9 @@ def to_16x9(img, w=1280, h=720):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--prompt", required=True, help="cena + texto exato da capa")
-    ap.add_argument("--out", required=True)
+    ap.add_argument("--check-key", action="store_true", help="só confere se a chave existe (não mostra o valor)")
+    ap.add_argument("--prompt", help="cena + texto exato da capa")
+    ap.add_argument("--out")
     ap.add_argument("--ref", action="append", default=[], help="frame real do vídeo (objeto principal/cenário)")
     ap.add_argument("--model", default="openai/gpt-5.4-image-2")
     ap.add_argument("--no-style", action="store_true", help="não enviar as miniaturas de referência")
@@ -92,12 +111,21 @@ def main():
     ap.add_argument("--from-raw", help="pula a API e só recorta esta imagem")
     a = ap.parse_args()
 
+    if a.check_key:
+        key, origin = load_key()
+        if not key:
+            sys.exit(SETUP_HELP)
+        print(f"ok (chave encontrada em: {origin})")
+        return
+    if not a.prompt or not a.out:
+        ap.error("--prompt e --out são obrigatórios")
+
     if a.from_raw:
         to_16x9(Image.open(a.from_raw).convert("RGB")).save(a.out)
         print(f"OK {a.out}")
         return
 
-    key = os.environ.get("OPENROUTER_API_KEY")
+    key, _ = load_key()
     if not key:
         sys.exit(SETUP_HELP)
 

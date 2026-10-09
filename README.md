@@ -66,18 +66,20 @@ Usa o `edicao-de-video` e acrescenta o que é específico de canal de motovlog.
 - **GPU NVIDIA RTX** com driver atualizado (recomendado; é onde foi testado).
 - **ffmpeg** com NVENC no PATH (`ffmpeg -encoders | grep nvenc`). No Windows: `choco install ffmpeg-full` ou `winget install Gyan.FFmpeg`.
 - **Python 3.10+** com: `pip install faster-whisper requests pillow yt-dlp` e PyTorch com CUDA (https://pytorch.org/get-started/locally/).
-- **OpenRouter** (só para as capas). A variável de ambiente `OPENROUTER_API_KEY` precisa existir antes de pedir capas:
+- **OpenRouter** (só para as capas). A chave `OPENROUTER_API_KEY` precisa estar configurada antes de pedir capas:
   1. Crie uma conta em https://openrouter.ai e adicione créditos (Settings → Credits). Cada capa custa alguns centavos de dólar.
   2. Gere uma chave em https://openrouter.ai/settings/keys.
-  3. Defina a variável de ambiente do usuário e reinicie o Claude Code:
-     - Windows (PowerShell): `[Environment]::SetEnvironmentVariable("OPENROUTER_API_KEY", "sk-or-...", "User")`
-     - macOS/Linux: `export OPENROUTER_API_KEY="sk-or-..."` no `~/.zshrc` ou `~/.bashrc`
+  3. Configure de um destes jeitos (as skills procuram nesta ordem):
+     - **Variável de ambiente** do usuário, reiniciando o Claude Code depois:
+       - Windows (PowerShell): `[Environment]::SetEnvironmentVariable("OPENROUTER_API_KEY", "sk-or-...", "User")`
+       - macOS/Linux: `export OPENROUTER_API_KEY="sk-or-..."` no `~/.zshrc` ou `~/.bashrc`
+     - **Arquivo `.env`** na pasta do canal (ou numa pasta acima dela), com a linha `OPENROUTER_API_KEY=sk-or-...`. Mantenha esse arquivo fora de repositórios git.
 
-  Não cole a chave no chat: as skills só leem a variável de ambiente.
+  Não cole a chave no chat: as skills leem a variável de ambiente ou o `.env` e nunca mostram o valor.
 
 #### Pasta do canal
 
-Os dados do seu canal ficam **só na sua máquina**, numa pasta de trabalho (ex.: `~/videos-youtube/`): `canal.md` (gerado pelo `conhecer-canal`), `estilo-capas/` (suas miniaturas de referência) e uma subpasta por vídeo. Nada disso vai para o plugin nem para o repositório.
+Os dados do seu canal ficam **só na sua máquina**, numa pasta de trabalho (ex.: `~/videos-youtube/`): `canal.md` (gerado pelo `conhecer-canal`), `estilo-capas/` (suas miniaturas de referência), `.env` (chave do OpenRouter, opcional) e uma subpasta por vídeo. Nada disso vai para o plugin nem para o repositório.
 
 ## Canais de ofertas no WhatsApp
 
