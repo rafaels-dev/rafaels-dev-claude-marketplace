@@ -1,0 +1,10 @@
+{
+  "name": "compras",
+  "description": "Caçador de ofertas para compras online no Brasil: monitor de cupons em loop, teste de cupons no carrinho do Mercado Livre e da Shopee e busca do mesmo produto mais barato ou mais rápido. Usa o navegador do próprio usuário (Claude in Chrome) e nunca finaliza a compra. Combine com o plugin 'whatsapp' para ler canais de cupons e negociar com lojas.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Rafael Schettino",
+    "url": "https://github.com/rafaels-dev"
+  },
+  "keywords": ["cupons", "mercado-livre", "shopee", "compras", "ofertas", "brasil"]
+}

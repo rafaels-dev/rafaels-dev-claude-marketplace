@@ -1,0 +1,10 @@
+{
+  "name": "whatsapp",
+  "description": "Automação cuidadosa do WhatsApp Web pelo navegador do usuário (Claude in Chrome): ler canais de ofertas e conversas, achar cupons nas mensagens, e pedir cotação/negociar com lojas por mensagens naturais — sempre com aprovação do usuário para enviar.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Rafael Schettino",
+    "url": "https://github.com/rafaels-dev"
+  },
+  "keywords": ["whatsapp", "canais", "cupons", "negociacao", "automacao"]
+}

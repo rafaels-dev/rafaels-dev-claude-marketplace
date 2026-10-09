@@ -1,0 +1,28 @@
+{
+  "name": "rafaels-dev-marketplace",
+  "owner": {
+    "name": "Rafael Schettino"
+  },
+  "metadata": {
+    "description": "Plugins e skills para Claude Code feitos por Rafael Schettino (rafaels-dev).",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "compras",
+      "source": "./plugins/compras",
+      "description": "Caçador de ofertas: monitor de cupons em loop, teste de cupons no carrinho do Mercado Livre e da Shopee, e busca do mesmo produto mais barato/mais rápido. Nunca finaliza a compra.",
+      "version": "1.0.0",
+      "category": "productivity",
+      "keywords": ["cupons", "mercado-livre", "shopee", "compras", "ofertas", "brasil"]
+    },
+    {
+      "name": "whatsapp",
+      "source": "./plugins/whatsapp",
+      "description": "Lê canais de ofertas e conversas do WhatsApp Web e negocia preço com lojas por mensagens naturais, sempre com aprovação do usuário.",
+      "version": "1.0.0",
+      "category": "productivity",
+      "keywords": ["whatsapp", "canais", "cupons", "negociacao"]
+    }
+  ]
+}
