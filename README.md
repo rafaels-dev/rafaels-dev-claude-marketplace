@@ -24,6 +24,7 @@ Para quem quer pagar o menor preço possível em compras online no Brasil.
 | `cupons-mercadolivre` | Testa códigos no carrinho do Mercado Livre, interpreta as respostas ("produtos selecionados", "já usou"…), calcula o desconto efetivo (limite, compra mínima, Pix) e ativa em massa os cupons da página /cupons. |
 | `cupons-shopee` | Testa códigos no carrinho da Shopee e restaura o melhor cupom quando a Shopee troca sozinha para um pior. |
 | `produto-identico-mais-barato` | Acha o **mesmo** produto (marca, código de peça, compatibilidade, novo) mais barato ou com entrega mais rápida — sem trocar por similar. |
+| `negociacao-com-vendedor` | Conversa com o vendedor no chat do marketplace (Shopee, perguntas do ML) para pedir preço melhor no Pix, com contraproposta baseada em preço real e sempre com a sua aprovação. |
 
 ### 💬 `whatsapp` — WhatsApp Web sem dor
 
