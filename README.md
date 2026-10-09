@@ -59,6 +59,19 @@ Canais públicos que uso como fonte de cupons. Siga os que fizerem sentido para 
 - **Mensagens só com aprovação.** Nada é enviado em seu nome (WhatsApp, chat de loja) sem você autorizar, e seus dados pessoais não são compartilhados.
 - **Sem roubar seu mouse.** Tudo pelo Claude in Chrome, sem controlar o mouse/teclado do sistema.
 
+## Comandos prontos (exemplos de prompt)
+
+Além das skills, cada plugin traz comandos com prompts já escritos. Digite `/` no Claude Code para ver a lista, ou use direto:
+
+| Comando | Exemplo |
+|---|---|
+| `/compras:cacar-ofertas` | `/compras:cacar-ofertas capacete X tamanho 58, só Mercado Livre, entrega em até 1 semana, quero pelo menos 15% de desconto` |
+| `/compras:testar-cupons` | `/compras:testar-cupons CUPOMEXCLUSIVO BOLSOCHEIO ml` |
+| `/compras:achar-mais-barato` | `/compras:achar-mais-barato filtro de óleo original código <código>, chegando até sexta` |
+| `/compras:negociar-vendedor` | `/compras:negociar-vendedor <link do anúncio> pedir R$ 420 no Pix; se recusar, agradece` |
+| `/whatsapp:ler-canais` | `/whatsapp:ler-canais só cupons do Mercado Livre e Shopee` |
+| `/whatsapp:cotar-lojas` | `/whatsapp:cotar-lojas peça <código> em <sua cidade>, referência R$ 450 no Pix` |
+
 ## Exemplos de uso
 
 ```
